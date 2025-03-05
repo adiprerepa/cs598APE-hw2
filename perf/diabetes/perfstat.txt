@@ -1,0 +1,22 @@
+# started on Wed Mar  5 06:42:24 2025
+
+
+ Performance counter stats for './genetic_benchmark diabetes':
+
+           3176.40 msec task-clock                       #    1.000 CPUs utilized             
+                17      context-switches                 #    5.352 /sec                      
+                 0      cpu-migrations                   #    0.000 /sec                      
+              1360      page-faults                      #  428.158 /sec                      
+       14549380035      cycles                           #    4.580 GHz                       
+         563612927      stalled-cycles-frontend          #    3.87% frontend cycles idle      
+       38269525026      instructions                     #    2.63  insn per cycle            
+                                                  #    0.01  stalled cycles per insn   
+        8555157531      branches                         #    2.693 G/sec                     
+          28877462      branch-misses                    #    0.34% of all branches           
+
+       3.177428902 seconds time elapsed
+
+       3.171900000 seconds user
+       0.004999000 seconds sys
+
+

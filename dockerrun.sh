@@ -1,0 +1,1 @@
+docker run --privileged -it -v `pwd`:/host adiprerepa/598ape /bin/bash
