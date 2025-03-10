@@ -123,13 +123,26 @@ void find_batched_fitness(int n_progs, program_t d_progs, float *score,
                           const param &params, const int n_rows,
                           const float *data, const float *y,
                           const float *sample_weights) {
-
-  std::vector<float> y_pred((uint64_t)n_rows * (uint64_t)n_progs);
-  execute(d_progs, n_rows, n_progs, data, y_pred.data());
-
-  // Compute error
-  compute_metric(n_rows, n_progs, y, y_pred.data(), sample_weights, score,
-                 params);
+  // Process in batches to reduce memory usage and optimize execute calls
+  const int batch_size = 100; // Configurable batch size
+  
+  // Initialize all scores
+  for (int i = 0; i < n_progs; i++) {
+    score[i] = 0.0f;
+  }
+  
+  std::vector<float> y_pred((uint64_t)n_rows * std::min(batch_size, n_progs));
+  
+  for (int batch_start = 0; batch_start < n_progs; batch_start += batch_size) {
+    int current_batch_size = std::min(batch_size, n_progs - batch_start);
+    
+    // Execute only for the current batch of programs
+    execute(d_progs + batch_start, n_rows, current_batch_size, data, y_pred.data());
+    
+    // Compute metrics for this batch
+    compute_metric(n_rows, current_batch_size, y, y_pred.data(), sample_weights, 
+                  score + batch_start, params);
+  }
 }
 
 void set_fitness(program &h_prog, const param &params, const int n_rows,
