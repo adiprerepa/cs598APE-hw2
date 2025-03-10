@@ -105,7 +105,10 @@ void cpp_evolve(const std::vector<program> &h_oldprogs,
     for (auto i = 0; i < n_progs; ++i) {
       build_program(h_nextprogs[i], params, h_gen);
     }
-
+    
+    // Update raw fitness for all programs
+    set_batched_fitness(n_progs, h_nextprogs, params, n_samples, data, y,
+                      sample_weights);
   } else {
     // Set mutation type
     float mut_probs[4];
@@ -139,14 +142,9 @@ void cpp_evolve(const std::vector<program> &h_oldprogs,
     tournament_kernel(h_oldprogs, d_win_indices.data(), seed, n_progs, n_tours,
                       tour_size, criterion, params.parsimony_coefficient);
 
-    // dim3 nblks(raft::ceildiv(n_tours, GENE_TPB), 1, 1);
-    // batched_tournament_kernel<<<nblks, GENE_TPB, 0, stream>>>(
-    //     d_oldprogs, d_win_indices.data(), tour_seeds.data(), n_progs,
-    //     n_tours, tour_size, criterion, params.parsimony_coefficient);
-    // RAFT_CUDA_TRY(cudaPeekAtLastError());
-    // h.sync_stream(stream);
-
     // Perform host mutations
+    std::vector<program*> programs_needing_fitness;
+    programs_needing_fitness.reserve(n_progs);
 
     auto donor_pos = n_progs;
     for (auto pos = 0; pos < n_progs; ++pos) {
@@ -158,26 +156,46 @@ void cpp_evolve(const std::vector<program> &h_oldprogs,
         donor_pos++;
         crossover(h_oldprogs[parent_index], h_oldprogs[donor_index],
                   h_nextprogs[pos], params, h_gen);
+        programs_needing_fitness.push_back(&h_nextprogs[pos]);
       } else if (h_nextprogs[pos].mut_type == mutation_t::subtree) {
         subtree_mutation(h_oldprogs[parent_index], h_nextprogs[pos], params,
                          h_gen);
+        programs_needing_fitness.push_back(&h_nextprogs[pos]);
       } else if (h_nextprogs[pos].mut_type == mutation_t::hoist) {
         hoist_mutation(h_oldprogs[parent_index], h_nextprogs[pos], params,
                        h_gen);
+        programs_needing_fitness.push_back(&h_nextprogs[pos]);
       } else if (h_nextprogs[pos].mut_type == mutation_t::point) {
         point_mutation(h_oldprogs[parent_index], h_nextprogs[pos], params,
                        h_gen);
+        programs_needing_fitness.push_back(&h_nextprogs[pos]);
       } else if (h_nextprogs[pos].mut_type == mutation_t::reproduce) {
+        // Simply copy the program and its fitness
         h_nextprogs[pos] = h_oldprogs[parent_index];
       } else {
         // Should not come here
       }
     }
-  }
 
-  // Update raw fitness for all programs
-  set_batched_fitness(n_progs, h_nextprogs, params, n_samples, data, y,
-                      sample_weights);
+    // Only calculate fitness for programs that need it
+    if (!programs_needing_fitness.empty()) {
+      std::vector<program> programs_to_evaluate;
+      programs_to_evaluate.reserve(programs_needing_fitness.size());
+      
+      for (auto* prog_ptr : programs_needing_fitness) {
+        programs_to_evaluate.push_back(*prog_ptr);
+      }
+      
+      // Calculate fitness for modified programs
+      set_batched_fitness(programs_to_evaluate.size(), programs_to_evaluate, 
+                          params, n_samples, data, y, sample_weights);
+      
+      // Copy back the fitness values
+      for (size_t i = 0; i < programs_needing_fitness.size(); ++i) {
+        *programs_needing_fitness[i] = programs_to_evaluate[i];
+      }
+    }
+  }
 }
 
 float param::p_reproduce() const {
