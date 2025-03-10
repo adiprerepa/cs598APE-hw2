@@ -118,14 +118,41 @@ uint64_t myrand() {
 /// a given counter variable. 
 /// For example, consider the following code: https://godbolt.org/z/roEY46GeG
 #include <stdio.h>
-int main() {
-  for (int i=0; i<20; i++)
-      printf("%d : %lu\n", i, myrand());
+int main(int argc, char *argv[]) {
+  try {
+    // Default datasets
+    std::string regression_dataset = "benchmark/diabetes.csv";
+    std::string classification_dataset = "benchmark/cancer.csv";
+    std::string housing_dataset = "benchmark/housing.csv";
 
-  philox_initialized = false;
-  for (int i=0; i<20; i+=4) {
-      printf("%d : %lu\n", i, myrand());
-      philox_skip(3);
+    // Check if argument is provided
+    if (argc < 2) {
+      std::cerr << "Error: Missing dataset argument" << std::endl;
+      return 1;
+    }
+
+    std::string arg_dset(argv[1]);
+
+    if (arg_dset == "diabetes") {
+      run_symbolic_regression(regression_dataset);
+      return 0;
+    } 
+    
+    if (arg_dset == "cancer") {
+      run_symbolic_classification(classification_dataset);
+      return 0;
+    } 
+    
+    if (arg_dset == "housing") {
+      run_symbolic_regression(housing_dataset);
+      return 0;
+    }
+
+    std::cerr << "Error: Unknown dataset '" << arg_dset << "'" << std::endl;
+    return 1;
+  } catch (const std::exception &e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return 1;
   }
 }
 
