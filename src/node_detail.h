@@ -14,7 +14,9 @@ inline bool is_terminal(node::type t) {
   return t == node::type::variable || t == node::type::constant;
 }
 
-inline bool is_nonterminal(node::type t) { return !is_terminal(t); }
+inline bool is_nonterminal(node::type t) {
+  return t >= node::type::functions_begin && t <= node::type::functions_end;
+}
 
 inline int arity(node::type t) {
   if (node::type::unary_begin <= t && t <= node::type::unary_end) {
