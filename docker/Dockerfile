@@ -15,6 +15,21 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 10 --sl
     && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-19 10 \
     && update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-19 10
 
+RUN apt update
+
+RUN export KERNEL_VERSION=$(uname -r) && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        autoconf cmake ninja-build gcc g++ linux-tools-common linux-tools-generic \
+        libtool llvm-19-dev lld-19 clang-19 libomp-19-dev libopenmpi-dev openmpi-bin \
+        git make imagemagick ffmpeg perl curl gnupg software-properties-common \
+        libc++-dev libc++abi-dev \
+        linux-tools-azure linux-cloud-tools-azure \
+        linux-tools-$KERNEL_VERSION linux-cloud-tools-$KERNEL_VERSION \
+        linux-tools-6.8.0-57-generic linux-cloud-tools-6.8.0-57-generic \
+        linux-tools-6.8.0-1020-azure linux-cloud-tools-6.8.0-1020-azure || true
+
+RUN apt-get update
+
 RUN ln -s /usr/bin/convert /usr/bin/magick
 
 ENV DEBIAN_FRONTEND=
