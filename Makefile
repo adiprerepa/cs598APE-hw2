@@ -1,5 +1,5 @@
 CXX := clang++
-CXXFLAGS := -stdlib=libc++ -std=c++17 -Wall -Wextra -I include -I. -fsave-optimization-record
+CXXFLAGS := -stdlib=libc++ -std=c++17 -Wall -Wextra -I include -I. -O3 -fsave-optimization-record
 
 # Directories
 SRC_DIR := src
