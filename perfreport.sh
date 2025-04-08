@@ -44,26 +44,26 @@ mkdir -p perf/diabetes perf/cancer perf/housing
 
 if [ "$DIABETES" = true ]; then
   echo -e "Running ${GREEN}Diabetes${RESET} benchmark..."
-  perf record -o perf/diabetes/perf.data -F 99 -g -- ./genetic_benchmark diabetes
+  perf record -o perf/diabetes/perf.data -F 1000 --call-graph dwarf -g -- ./genetic_benchmark diabetes
   perf stat -o perf/diabetes/perfstat.txt -- ./genetic_benchmark diabetes
-  perf script -i perf/diabetes/perf.data | perl FlameGraph/stackcollapse-perf.pl > perfstacks/diabetes.folded
-  perf script -i perf/diabetes/perf.data | perl FlameGraph/stackcollapse-perf.pl | perl FlameGraph/flamegraph.pl --width 2400 --height 48 > perf/diabetes/flamegraph.svg
+  perf script --no-demangle -i perf/diabetes/perf.data | perl FlameGraph/stackcollapse-perf.pl > perfstacks/diabetes.folded
+  perf script --no-demangle -i perf/diabetes/perf.data | perl FlameGraph/stackcollapse-perf.pl | perl FlameGraph/flamegraph.pl --width 2400 --height 48 > perf/diabetes/flamegraph.svg
 fi
 
 if [ "$CANCER" = true ]; then
   echo -e "Running ${GREEN}Cancer${RESET} benchmark..."
-  perf record -o perf/cancer/perf.data -F 99 -g -- ./genetic_benchmark cancer
+  perf record -o perf/cancer/perf.data -F 1000 --call-graph dwarf -g -- ./genetic_benchmark cancer
   perf stat -o perf/cancer/perfstat.txt -- ./genetic_benchmark cancer
-  perf script -i perf/cancer/perf.data | perl FlameGraph/stackcollapse-perf.pl > perfstacks/cancer.folded
-  perf script -i perf/cancer/perf.data | perl FlameGraph/stackcollapse-perf.pl | perl FlameGraph/flamegraph.pl --width 2400 --height 48 > perf/cancer/flamegraph.svg
+  perf script --no-demangle -i perf/cancer/perf.data | perl FlameGraph/stackcollapse-perf.pl > perfstacks/cancer.folded
+  perf script --no-demangle -i perf/cancer/perf.data | perl FlameGraph/stackcollapse-perf.pl | perl FlameGraph/flamegraph.pl --width 2400 --height 48 > perf/cancer/flamegraph.svg
 fi
 
 if [ "$HOUSING" = true ]; then
   echo -e "Running ${GREEN}Housing${RESET} benchmark..."
-  perf record -o perf/housing/perf.data -F 99 -g -- ./genetic_benchmark housing
+  perf record -o perf/housing/perf.data -F 1000 --call-graph dwarf -g -- ./genetic_benchmark housing
   perf stat -o perf/housing/perfstat.txt -- ./genetic_benchmark housing
-  perf script -i perf/housing/perf.data | perl FlameGraph/stackcollapse-perf.pl > perfstacks/housing.folded
-  perf script -i perf/housing/perf.data | perl FlameGraph/stackcollapse-perf.pl | perl FlameGraph/flamegraph.pl --width 2400 --height 48 > perf/housing/flamegraph.svg
+  perf script --no-demangle -i perf/housing/perf.data | perl FlameGraph/stackcollapse-perf.pl > perfstacks/housing.folded
+  perf script --no-demangle  -i perf/housing/perf.data | perl FlameGraph/stackcollapse-perf.pl | perl FlameGraph/flamegraph.pl --width 2400 --height 48 > perf/housing/flamegraph.svg
 fi
 
 echo -e "${GREEN}Performance reports generated in the 'perf' directory.${RESET}"
