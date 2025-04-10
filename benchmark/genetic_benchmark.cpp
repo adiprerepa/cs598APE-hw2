@@ -143,14 +143,25 @@ using namespace genetic;
 
 void insertionSortPrograms(genetic::program *programs, int size) {
   for (int i = 1; i < size; i++) {
+    // Create a temporary copy only once
     genetic::program key(programs[i]);
     int j = i - 1;
 
+    // Find insertion position without copying
     while (j >= 0 && (programs[j].raw_fitness_ > key.raw_fitness_)) {
-      programs[j + 1] = programs[j];
       j--;
     }
-    programs[j + 1] = key;
+    
+    // Shift elements only once instead of in each iteration
+    j++;
+    if (j < i) {
+      // Save the position where key will be inserted
+      for (int k = i; k > j; k--) {
+        programs[k] = programs[k-1];
+      }
+      // Place key in the correct position
+      programs[j] = key;
+    }
   }
 }
 
