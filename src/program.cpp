@@ -74,9 +74,13 @@ program &program::operator=(const program &src) {
   metric = src.metric;
   mut_type = src.mut_type;
 
+  // Only allocate new memory if needed
+  if (nodes == nullptr || len <= 0) {
+    delete[] nodes;
+    nodes = new node[len];
+  }
+  
   // Copy nodes
-  delete[] nodes;
-  nodes = new node[len];
   std::copy(src.nodes, src.nodes + src.len, nodes);
 
   return *this;
