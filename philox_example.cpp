@@ -91,16 +91,28 @@ void philox_raisekey(uint32_t key[2]) {
 // Returns a group of four random numbers using the underlying Philox
 // algorithm.
 void philox_next4(uint32_t out[4]) {
-  for (int i=0; i<4; i++)
-    out[i] = counter_[i];
-  uint32_t key[2] = {key_[0], key_[1]};
-  for (int i=0; i<10; i++) {
+    if (!global_philox_state.initialized) {
+        philox_reset();
+    }
+    
+    // Copy counter values once
+    out[0] = global_philox_state.counter[0];
+    out[1] = global_philox_state.counter[1];
+    out[2] = global_philox_state.counter[2];
+    out[3] = global_philox_state.counter[3];
+    
+    // Cache key values in local variables
+    uint32_t key[2] = {global_philox_state.key[0], global_philox_state.key[1]};
+    
+    // Process first 9 rounds with unconditional key raising
+    for (int i = 0; i < 9; i++) {
+        philox_oneround(out, key);
+        philox_raisekey(key);
+    }
+    
+    // Handle the final round separately to avoid conditional in loop
     philox_oneround(out, key);
-    if (i == 9)
-      philox_skip(1);
-    else
-      philox_raisekey(key);
-  }
+    philox_skip(1);
 }
 
 uint64_t myrand() {
