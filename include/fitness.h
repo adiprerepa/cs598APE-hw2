@@ -233,30 +233,29 @@ template <typename math_t = float>
 void meanSquareError(const uint64_t n_samples, const uint64_t n_progs,
                      const math_t *Y, const math_t *Y_pred, const math_t *W,
                      math_t *out) {
-
-  std::vector<math_t> error(n_samples * n_progs);
-  math_t N = static_cast<math_t>(n_samples);
-
-  // Weight Sum
+  const math_t N = static_cast<math_t>(n_samples);
+  
+  // Calculate weight sum
   math_t WS = static_cast<math_t>(0);
   for (uint64_t i = 0; i < n_samples; ++i) {
     WS += W[i];
   }
+  
+  // Precompute N/WS to avoid division in inner loop
+  const math_t N_div_WS = N / WS;
 
-  // Compute absolute differences
-  for (uint64_t pid = 0; pid < n_progs; ++pid) {
-    for (uint64_t i = 0; i < n_samples; ++i) {
-      error[pid * n_samples + i] = N * W[i] *
-                                   (Y_pred[pid * n_samples + i] - Y[i]) *
-                                   (Y_pred[pid * n_samples + i] - Y[i]) / WS;
-    }
-  }
-
-  // Average along rows
+  // Initialize output array
   for (uint64_t pid = 0; pid < n_progs; ++pid) {
     out[pid] = static_cast<math_t>(0);
+  }
+
+  // Combined calculation and summation
+  for (uint64_t pid = 0; pid < n_progs; ++pid) {
+    const uint64_t pid_offset = pid * n_samples;
     for (uint64_t i = 0; i < n_samples; ++i) {
-      out[pid] += error[pid * n_samples + i] / N;
+      const math_t diff = Y_pred[pid_offset + i] - Y[i];
+      const math_t weighted_error = W[i] * diff * diff * N_div_WS;
+      out[pid] += weighted_error / N;
     }
   }
 }
