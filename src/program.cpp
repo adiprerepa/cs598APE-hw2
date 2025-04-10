@@ -186,43 +186,45 @@ float get_fitness(const program &prog, const param &params) {
  * @return A tuple [first,last) which contains the required subtree
  */
 std::pair<int, int> get_subtree(node *pnodes, int len, PhiloxEngine &rng) {
-  int start, end;
-  start = end = 0;
-
   // Specify RNG
   uniform_real_distribution_custom<float> dist_uniform(0.0f, 1.0f);
   float bound = dist_uniform(rng);
 
-  // Specify subtree start probs acc to Koza's selection approach
-  std::vector<float> node_probs(len, 0.1);
-  float sum = 0.1 * len;
-
+  // Compute sum for normalization
+  float sum = 0.0f;
+  int nonterminal_count = 0;
   for (int i = 0; i < len; ++i) {
     if (pnodes[i].is_nonterminal()) {
-      node_probs[i] = 0.9;
-      sum += 0.8;
+      nonterminal_count++;
     }
   }
-
-  // Normalize vector
+  sum = 0.1f * (len - nonterminal_count) + 0.9f * nonterminal_count;
+  
+  // Precompute normalization factors
+  const float terminal_prob = 0.1f / sum;
+  const float nonterminal_prob = 0.9f / sum;
+  
+  // Calculate cumulative probabilities directly
+  std::vector<float> cumulative_probs(len);
+  float cumulative = 0.0f;
   for (int i = 0; i < len; ++i) {
-    node_probs[i] /= sum;
+    cumulative += pnodes[i].is_nonterminal() ? nonterminal_prob : terminal_prob;
+    cumulative_probs[i] = cumulative;
   }
 
-  // Compute cumulative sum
-  std::partial_sum(node_probs.begin(), node_probs.end(), node_probs.begin());
-
-  start = std::lower_bound(node_probs.begin(), node_probs.end(), bound) -
-          node_probs.begin();
-  end = start;
-
+  // Find start index using binary search
+  int start = 0;
+  while (start < len && cumulative_probs[start] < bound) {
+    start++;
+  }
+  
+  int end = start;
+  
   // Iterate until all function arguments are satisfied in current subtree
   int num_args = 1;
-  while (num_args > end - start) {
-    node curr;
-    curr = pnodes[end];
-    if (curr.is_nonterminal())
-      num_args += curr.arity();
+  while (num_args > end - start && end < len) {
+    if (pnodes[end].is_nonterminal())
+      num_args += pnodes[end].arity();
     ++end;
   }
 
