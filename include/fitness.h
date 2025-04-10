@@ -278,30 +278,32 @@ void rootMeanSquareError(const uint64_t n_samples, const uint64_t n_progs,
 template <typename math_t = float>
 void logLoss(const uint64_t n_samples, const uint64_t n_progs, const math_t *Y,
              const math_t *Y_pred, const math_t *W, math_t *out) {
-  // Logistic error per sample
-  std::vector<math_t> error(n_samples * n_progs);
-  math_t N = (math_t)n_samples;
-
+  const math_t N = static_cast<math_t>(n_samples);
+  
   // Weight Sum
   math_t WS = static_cast<math_t>(0);
   for (uint64_t i = 0; i < n_samples; ++i) {
     WS += W[i];
   }
-
-  // Compute logistic loss as described in
-  // http://fa.bianp.net/blog/2019/evaluate_logistic/
-  // in an attempt to avoid encountering nan values. Modified for weighted
-  // logistic regression.
-  // PS - In 2021, I spent 2 sleepless nights trying to just compute this, then
-  // adapt it for the weighted version (turned out pre-multiplying N just
-  // worked). Improving numerical stability in CUDA is ... :)
-
+  
+  const math_t inv_N = math_t(1) / N;
+  const math_t N_div_WS = N / WS;
+  
+  // Initialize output array
   for (uint64_t pid = 0; pid < n_progs; ++pid) {
+    out[pid] = static_cast<math_t>(0);
+  }
+  
+  // Process each program
+  for (uint64_t pid = 0; pid < n_progs; ++pid) {
+    const math_t* Y_pred_prog = Y_pred + pid * n_samples;
+    
     for (uint64_t i = 0; i < n_samples; ++i) {
       math_t logsig;
-      math_t yp = Y_pred[pid * n_samples + i];
+      math_t yp = Y_pred_prog[i];
       math_t y = Y[i];
       math_t w = W[i];
+      
       if (yp < -33.3)
         logsig = yp;
       else if (yp <= -18)
@@ -310,15 +312,10 @@ void logLoss(const uint64_t n_samples, const uint64_t n_progs, const math_t *Y,
         logsig = -log1pf(expf(-yp));
       else
         logsig = -expf(-yp);
-      error[pid * n_samples + i] = ((1 - y) * yp - logsig) * (N * w / WS);
-    }
-  }
-
-  // Take average along rows
-  for (uint64_t pid = 0; pid < n_progs; ++pid) {
-    out[pid] = static_cast<math_t>(0);
-    for (uint64_t i = 0; i < n_samples; ++i) {
-      out[pid] += error[pid * n_samples + i] / N;
+      
+      // Calculate error and directly accumulate to output
+      math_t error_value = ((1 - y) * yp - logsig) * (w * N_div_WS);
+      out[pid] += error_value * inv_N;
     }
   }
 }
