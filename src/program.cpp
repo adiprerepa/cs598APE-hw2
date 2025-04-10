@@ -158,17 +158,22 @@ void set_batched_fitness(int n_progs, std::vector<program> &h_progs,
                          const param &params, const int n_rows,
                          const float *data, const float *y,
                          const float *sample_weights) {
-
-  std::vector<float> score(n_progs);
-
-  find_batched_fitness(n_progs, h_progs.data(), score.data(), params, n_rows,
-                       data, y, sample_weights);
-
-  // Update scores on host and device
-  // TODO: Find a way to reduce the number of implicit memory transfers
-  for (auto i = 0; i < n_progs; ++i) {
-    h_progs[i].raw_fitness_ = score[i];
+  if (n_progs <= 0) {
+    return;
   }
+  
+  // Get pointer to the first program and ensure vector is contiguous
+  program* programs_ptr = h_progs.data();
+  
+  // Create array of pointers to raw_fitness_ fields
+  std::vector<float*> fitness_ptrs(n_progs);
+  for (int i = 0; i < n_progs; ++i) {
+    fitness_ptrs[i] = &(programs_ptr[i].raw_fitness_);
+  }
+  
+  // Call find_batched_fitness with pointers directly to the program's raw_fitness_ fields
+  find_batched_fitness(n_progs, programs_ptr, fitness_ptrs.data(), params, n_rows,
+                       data, y, sample_weights);
 }
 
 float get_fitness(const program &prog, const param &params) {
