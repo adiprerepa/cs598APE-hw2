@@ -66,17 +66,21 @@ program::program(const program &src)
 }
 
 program &program::operator=(const program &src) {
+  if (len != src.len) {
+    // Only reallocate if the length differs
+    delete[] nodes;
+    nodes = new node[src.len];
+  }
+  
   len = src.len;
   depth = src.depth;
   raw_fitness_ = src.raw_fitness_;
   metric = src.metric;
   mut_type = src.mut_type;
-
+  
   // Copy nodes
-  delete[] nodes;
-  nodes = new node[len];
-  std::copy(src.nodes, src.nodes + src.len, nodes);
-
+  std::copy(src.nodes, src.nodes + len, nodes);
+  
   return *this;
 }
 
