@@ -30,24 +30,37 @@ void execute_kernel(const program_t d_progs, const float *data, float *y_pred,
       int end = curr_p->len - 1;
       node *curr_node = curr_p->nodes + end;
 
-      float res = 0.0f;
+      float curr_result = 0.0f;
       float in[2] = {0.0f, 0.0f};
 
       while (end >= 0) {
         if (detail::is_nonterminal(curr_node->t)) {
           int ar = detail::arity(curr_node->t);
-          in[0] = eval_stack.pop(); // Min arity of function is 1
-          if (ar > 1)
-            in[1] = eval_stack.pop();
+          if (ar > 0) {
+            in[0] = curr_result; // Use current result as first input
+            if (ar > 1) {
+              in[1] = eval_stack.pop(); // Only pop from stack when needed
+            }
+            curr_result = detail::evaluate_node(*curr_node, data, n_rows, row_id, in);
+          } else {
+            curr_result = detail::evaluate_node(*curr_node, data, n_rows, row_id, in);
+          }
+        } else {
+          // Terminal node
+          curr_result = detail::evaluate_node(*curr_node, data, n_rows, row_id, in);
         }
-        res = detail::evaluate_node(*curr_node, data, n_rows, row_id, in);
-        eval_stack.push(res);
+        
+        // Only push to stack if we need to save this result for later
+        if (end > 0 && detail::is_nonterminal(curr_node[-1].t) && detail::arity(curr_node[-1].t) > 1) {
+          eval_stack.push(curr_result);
+        }
+        
         curr_node--;
         end--;
       }
 
       // Outputs stored in col-major format
-      y_pred[pid * n_rows + row_id] = eval_stack.pop();
+      y_pred[pid * n_rows + row_id] = curr_result;
     }
   }
 }
