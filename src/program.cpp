@@ -127,13 +127,27 @@ void find_batched_fitness(int n_progs, program_t d_progs, float *score,
                           const param &params, const int n_rows,
                           const float *data, const float *y,
                           const float *sample_weights) {
+  // Early return if there's nothing to process
+  if (n_progs <= 0 || n_rows <= 0) {
+    return;
+  }
 
-  std::vector<float> y_pred((uint64_t)n_rows * (uint64_t)n_progs);
+  // Check for potential overflow in allocation size
+  if (static_cast<uint64_t>(n_rows) > std::numeric_limits<uint64_t>::max() / static_cast<uint64_t>(n_progs)) {
+    // Handle overflow case - in this case, we'll just return without processing
+    return;
+  }
+
+  // Allocate memory for predictions
+  std::vector<float> y_pred;
+  y_pred.reserve(static_cast<uint64_t>(n_rows) * static_cast<uint64_t>(n_progs));
+  y_pred.resize(static_cast<uint64_t>(n_rows) * static_cast<uint64_t>(n_progs));
+  
+  // Execute programs to get predictions
   execute(d_progs, n_rows, n_progs, data, y_pred.data());
 
-  // Compute error
-  compute_metric(n_rows, n_progs, y, y_pred.data(), sample_weights, score,
-                 params);
+  // Compute error metric
+  compute_metric(n_rows, n_progs, y, y_pred.data(), sample_weights, score, params);
 }
 
 void set_fitness(program &h_prog, const param &params, const int n_rows,
