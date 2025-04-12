@@ -234,30 +234,28 @@ void meanSquareError(const uint64_t n_samples, const uint64_t n_progs,
                      const math_t *Y, const math_t *Y_pred, const math_t *W,
                      math_t *out) {
 
-  std::vector<math_t> error(n_samples * n_progs);
-  math_t N = static_cast<math_t>(n_samples);
-
+  const math_t N = static_cast<math_t>(n_samples);
+  
   // Weight Sum
   math_t WS = static_cast<math_t>(0);
   for (uint64_t i = 0; i < n_samples; ++i) {
     WS += W[i];
   }
+  
+  // Precompute N/WS to avoid division in inner loop
+  const math_t N_div_WS = N / WS;
 
-  // Compute absolute differences
+  // Calculate MSE directly without intermediate storage
   for (uint64_t pid = 0; pid < n_progs; ++pid) {
+    math_t sum = static_cast<math_t>(0);
+    const math_t* Y_pred_row = &Y_pred[pid * n_samples];
+    
     for (uint64_t i = 0; i < n_samples; ++i) {
-      error[pid * n_samples + i] = N * W[i] *
-                                   (Y_pred[pid * n_samples + i] - Y[i]) *
-                                   (Y_pred[pid * n_samples + i] - Y[i]) / WS;
+      const math_t diff = Y_pred_row[i] - Y[i];
+      sum += W[i] * diff * diff * N_div_WS;
     }
-  }
-
-  // Average along rows
-  for (uint64_t pid = 0; pid < n_progs; ++pid) {
-    out[pid] = static_cast<math_t>(0);
-    for (uint64_t i = 0; i < n_samples; ++i) {
-      out[pid] += error[pid * n_samples + i] / N;
-    }
+    
+    out[pid] = sum / N;
   }
 }
 
