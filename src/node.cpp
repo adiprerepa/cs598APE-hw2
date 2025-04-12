@@ -50,7 +50,14 @@ node::node(const node &src) : t(src.t), u(src.u) {}
 
 node &node::operator=(const node &src) {
   t = src.t;
-  u = src.u;
+  if (src.t == type::constant) {
+    u.val = src.u.val;
+  } else if (src.t == type::variable) {
+    u.fid = src.u.fid;
+  } else {
+    // For function types, either field works as they share the same memory
+    u.fid = src.u.fid;
+  }
   return *this;
 }
 
