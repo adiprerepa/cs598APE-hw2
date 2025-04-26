@@ -22,17 +22,20 @@ template <int MaxSize = MAX_STACK_SIZE>
 void execute_kernel(const program_t d_progs, const float *data, float *y_pred,
                     const uint64_t n_rows, const uint64_t n_progs) {
   for (uint64_t pid = 0; pid < n_progs; ++pid) {
+    const program_t curr_p = d_progs + pid; // Current program
+    const int prog_len = curr_p->len;
+    const node* const nodes = curr_p->nodes;
+    const uint64_t result_offset = pid * n_rows;
+    
     for (uint64_t row_id = 0; row_id < n_rows; ++row_id) {
-
       stack<float, MaxSize> eval_stack;
-      program_t curr_p = d_progs + pid; // Current program
-
-      int end = curr_p->len - 1;
-      node *curr_node = curr_p->nodes + end;
-
+      
+      int end = prog_len - 1;
+      const node* curr_node = nodes + end;
+      
       float res = 0.0f;
       float in[2] = {0.0f, 0.0f};
-
+      
       while (end >= 0) {
         if (detail::is_nonterminal(curr_node->t)) {
           int ar = detail::arity(curr_node->t);
@@ -45,9 +48,9 @@ void execute_kernel(const program_t d_progs, const float *data, float *y_pred,
         curr_node--;
         end--;
       }
-
+      
       // Outputs stored in col-major format
-      y_pred[pid * n_rows + row_id] = eval_stack.pop();
+      y_pred[result_offset + row_id] = eval_stack.pop();
     }
   }
 }
