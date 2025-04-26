@@ -34,76 +34,81 @@ inline float evaluate_node(const node &n, const float *data, const uint64_t stri
   } else if (n.t == node::type::variable) {
     return data[(stride * n.u.fid) + idx];
   } else {
-    auto abs_inval = fabsf(in[0]), abs_inval1 = fabsf(in[1]);
+    const float inval = in[0];
+    const float abs_inval = fabsf(inval);
+    
     // note: keep the case statements in alphabetical order under each category
-    // of operators.
+    // of operators, but prioritize common operations
     switch (n.t) {
-    // binary operators
+    // binary operators - common ones first
     case node::type::add:
-      return in[0] + in[1];
-    case node::type::atan2:
-      return atan2f(in[0], in[1]);
-    case node::type::div:
-      return abs_inval1 < MIN_VAL ? 1.0f : (in[0]/in[1]);//fdividef(in[0], in[1]);
-    case node::type::fdim:
-      return fdimf(in[0], in[1]);
-    case node::type::max:
-      return fmaxf(in[0], in[1]);
-    case node::type::min:
-      return fminf(in[0], in[1]);
+      return inval + in[1];
     case node::type::mul:
-      return in[0] * in[1];
-    case node::type::pow:
-      return powf(in[0], in[1]);
+      return inval * in[1];
     case node::type::sub:
-      return in[0] - in[1];
-    // unary operators
+      return inval - in[1];
+    case node::type::div: {
+      const float abs_inval1 = fabsf(in[1]);
+      return abs_inval1 < MIN_VAL ? 1.0f : (inval/in[1]);
+    }
+    case node::type::atan2:
+      return atan2f(inval, in[1]);
+    case node::type::fdim:
+      return fdimf(inval, in[1]);
+    case node::type::max:
+      return fmaxf(inval, in[1]);
+    case node::type::min:
+      return fminf(inval, in[1]);
+    case node::type::pow:
+      return powf(inval, in[1]);
+    
+    // unary operators - common ones first
     case node::type::abs:
       return abs_inval;
-    case node::type::acos:
-      return acosf(in[0]);
-    case node::type::acosh:
-      return acoshf(in[0]);
-    case node::type::asin:
-      return asinf(in[0]);
-    case node::type::asinh:
-      return asinhf(in[0]);
-    case node::type::atan:
-      return atanf(in[0]);
-    case node::type::atanh:
-      return atanhf(in[0]);
-    case node::type::cbrt:
-      return cbrtf(in[0]);
-    case node::type::cos:
-      return cosf(in[0]);
-    case node::type::cosh:
-      return coshf(in[0]);
-    case node::type::cube:
-      return in[0] * in[0] * in[0];
-    case node::type::exp:
-      return expf(in[0]);
-    case node::type::inv:
-      return abs_inval < MIN_VAL ? 0.f : 1.f / in[0];
-    case node::type::log:
-      return abs_inval < MIN_VAL ? 0.f : logf(abs_inval);
-    case node::type::neg:
-      return -in[0];
-    case node::type::rcbrt:
-      return static_cast<float>(1.0) / cbrtf(in[0]);
-    case node::type::rsqrt:
-      return static_cast<float>(1.0) / sqrtf(abs_inval);
-    case node::type::sin:
-      return sinf(in[0]);
-    case node::type::sinh:
-      return sinhf(in[0]);
     case node::type::sq:
-      return in[0] * in[0];
+      return inval * inval;
+    case node::type::cube:
+      return inval * inval * inval;
+    case node::type::neg:
+      return -inval;
+    case node::type::inv:
+      return abs_inval < MIN_VAL ? 0.f : 1.f / inval;
     case node::type::sqrt:
       return sqrtf(abs_inval);
+    case node::type::sin:
+      return sinf(inval);
+    case node::type::cos:
+      return cosf(inval);
     case node::type::tan:
-      return tanf(in[0]);
+      return tanf(inval);
+    case node::type::log:
+      return abs_inval < MIN_VAL ? 0.f : logf(abs_inval);
+    case node::type::exp:
+      return expf(inval);
+    case node::type::acos:
+      return acosf(inval);
+    case node::type::acosh:
+      return acoshf(inval);
+    case node::type::asin:
+      return asinf(inval);
+    case node::type::asinh:
+      return asinhf(inval);
+    case node::type::atan:
+      return atanf(inval);
+    case node::type::atanh:
+      return atanhf(inval);
+    case node::type::cbrt:
+      return cbrtf(inval);
+    case node::type::cosh:
+      return coshf(inval);
+    case node::type::rcbrt:
+      return 1.0f / cbrtf(inval);
+    case node::type::rsqrt:
+      return 1.0f / sqrtf(abs_inval);
+    case node::type::sinh:
+      return sinhf(inval);
     case node::type::tanh:
-      return tanhf(in[0]);
+      return tanhf(inval);
     // shouldn't reach here!
     default:
       return 0.f;
