@@ -37,14 +37,12 @@ template <typename DataT, int MaxSize> struct stack {
    *       to push more than `MaxSize` elements leads to all sorts of incorrect
    *       behavior.
    */
-  void push(DataT val) {
-    for (int i = MaxSize - 1; i >= 0; --i) {
-      if (elements_ == i) {
-        ++elements_;
-        regs_[i] = val;
-      }
-    }
+  void push(DataT val) noexcept {
+  if (elements_ < MaxSize) {
+    regs_[elements_] = val;
+    ++elements_;
   }
+}
 
   /**
    * @brief Lazily pops the top element from the stack
