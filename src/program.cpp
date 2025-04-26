@@ -22,18 +22,19 @@ template <int MaxSize = MAX_STACK_SIZE>
 void execute_kernel(const program_t d_progs, const float *data, float *y_pred,
                     const uint64_t n_rows, const uint64_t n_progs) {
   for (uint64_t pid = 0; pid < n_progs; ++pid) {
+    program_t curr_p = d_progs + pid; // Current program
+    int end = curr_p->len - 1;
+    node *base_node = curr_p->nodes;
+    
     for (uint64_t row_id = 0; row_id < n_rows; ++row_id) {
-
       stack<float, MaxSize> eval_stack;
-      program_t curr_p = d_progs + pid; // Current program
-
-      int end = curr_p->len - 1;
-      node *curr_node = curr_p->nodes + end;
-
+      node *curr_node = base_node + end;
+      
       float res = 0.0f;
       float in[2] = {0.0f, 0.0f};
-
-      while (end >= 0) {
+      int curr_end = end;
+      
+      while (curr_end >= 0) {
         if (detail::is_nonterminal(curr_node->t)) {
           int ar = detail::arity(curr_node->t);
           in[0] = eval_stack.pop(); // Min arity of function is 1
@@ -43,9 +44,9 @@ void execute_kernel(const program_t d_progs, const float *data, float *y_pred,
         res = detail::evaluate_node(*curr_node, data, n_rows, row_id, in);
         eval_stack.push(res);
         curr_node--;
-        end--;
+        curr_end--;
       }
-
+      
       // Outputs stored in col-major format
       y_pred[pid * n_rows + row_id] = eval_stack.pop();
     }
