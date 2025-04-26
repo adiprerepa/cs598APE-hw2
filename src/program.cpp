@@ -103,6 +103,10 @@ void compute_metric(int n_rows, int n_progs, const float *y,
 
 void execute(const program_t &d_progs, const int n_rows, const int n_progs,
              const float *data, float *y_pred) {
+  // Skip execution if there are no rows or programs to process
+  if (n_rows <= 0 || n_progs <= 0) {
+    return;
+  }
   execute_kernel(d_progs, data, y_pred, static_cast<uint64_t>(n_rows),
                  static_cast<uint64_t>(n_progs));
 }
