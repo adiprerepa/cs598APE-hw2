@@ -1,0 +1,18 @@
+
+===== Symbolic Regression Benchmark =====
+
+Loading dataset...
+Dataset dimensions: 20640 samples x 8 features
+Training symbolic regressor with 512 population size and 16 generations
+Best program 1 details:
+- Length: 49 nodes
+- Depth: 15
+- Raw fitness: 0.795119
+- Test MSE: 0.763245
+- Program: ( add( cos( sub( fdim( log( fdim( log( fdim( X4, log( fdim( X4, sub( cos( exp( log( mult( X2, X5) ) ) ) , add( X5, X3) ) ) ) ) ) , log( fdim( X4, sub( log( mult( add( X2, X6) , sub( X0, X6) ) ) , add( X5, X3) ) ) ) ) ) , add( add( X2, X2) , exp( X1) ) ) , sin( add( X5, X3) ) ) ) , log( X0) ) )
+Best program 2 details:
+- Length: 45 nodes
+- Depth: 10
+- Raw fitness: 0.795119
+- Test MSE: 0.763245
+- Program: ( add( cos( sub( fdim( log( fdim( log( fdim( X4, add( X5, X3) ) ) , add( add( X5, X3) , exp( X1) ) ) ) , fdim( log( fdim( log( fdim( X4, add( X5, X3) ) ) , add( add( X5, X3) , exp( X1) ) ) ) , add( add( X5, X3) , exp( X1) ) ) ) , sin( add( X5, X3) ) ) ) , log( X0) ) )

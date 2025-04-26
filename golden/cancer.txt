@@ -1,0 +1,18 @@
+
+===== Symbolic Classification Benchmark =====
+
+Loading dataset...
+Dataset dimensions: 569 samples x 30 features
+Training symbolic classifier with 16384 population size and 16 generations 
+Best program 1 details:
+- Length: 15 nodes
+- Depth: 6
+- Raw fitness: 0.089771
+- Test accuracy: 0.946903
+- Program: ( mult( sub( sub( cos( sq( sq( X10) ) ) , cos( sqrt( X22) ) ) , mult( X21, X7) ) , sqrt( X21) ) )
+Best program 2 details:
+- Length: 15 nodes
+- Depth: 6
+- Raw fitness: 0.089771
+- Test accuracy: 0.946903
+- Program: ( mult( sub( sub( cos( sq( sq( X10) ) ) , cos( sqrt( X22) ) ) , mult( X21, X7) ) , sqrt( X21) ) )
