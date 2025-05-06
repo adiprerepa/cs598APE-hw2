@@ -103,6 +103,9 @@ void compute_metric(int n_rows, int n_progs, const float *y,
 
 void execute(const program_t &d_progs, const int n_rows, const int n_progs,
              const float *data, float *y_pred) {
+  // This function is a simple wrapper that forwards calls to execute_kernel
+  // Without more context about how execute_kernel works internally
+  // or how this function is called, we can't safely optimize it further
   execute_kernel(d_progs, data, y_pred, static_cast<uint64_t>(n_rows),
                  static_cast<uint64_t>(n_progs));
 }
